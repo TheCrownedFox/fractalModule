@@ -72,6 +72,7 @@ public class LaunchModule extends ProcessingModule {
 		if (receiver.whichHand() != -1) {			
 			x = receiver.getX();
 			y = receiver.getY();
+			growthTarget = (receiver.getZ() - receiver.getOffset()) / 20;
 		}
 	}
 
@@ -120,20 +121,24 @@ public class LaunchModule extends ProcessingModule {
 		
 		private Coordinate3D position;
 		int handID = -1;
+		float offsetZ;
 		
 		public MyHandReceiver() {
 			position = new Coordinate3D(0, 0, 0);
+			offsetZ = 0;
 		}
 		
-		public void handCreated(int id) {
-			System.out.println("Got a hand: " + id);
+		public void handCreated(HandPosition pos) {
+			System.out.println("Got a hand: " + pos.id);
 			if (handID == -1) {
-				handID = id;
+				handID = pos.id;
 			}
+			position = pos.position;
+			offsetZ = pos.position.getZ();
+			
 		}
 		
 		public void handUpdated(HandPosition pos) {
-			System.out.println("Got a new position " + pos.id);
 			if (pos.id == handID) {
 				position = pos.position;
 			}
@@ -156,6 +161,14 @@ public class LaunchModule extends ProcessingModule {
 		
 		public float getY() {
 			return position.getY();
+		}
+		
+		public float getZ() {
+			return position.getZ();
+		}
+		
+		public float getOffset() {
+			return offsetZ;
 		}
 	}
 }
