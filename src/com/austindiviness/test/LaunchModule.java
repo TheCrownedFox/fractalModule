@@ -11,10 +11,9 @@ import edu.mines.acmX.exhibit.input_services.hardware.HardwareManager;
 import edu.mines.acmX.exhibit.input_services.hardware.HardwareManagerManifestException;
 import edu.mines.acmX.exhibit.input_services.hardware.devicedata.HandTrackerInterface;
 import edu.mines.acmX.exhibit.input_services.hardware.drivers.openni.HandReceiver;
-import edu.mines.acmX.exhibit.module_manager.ProcessingModule;
 import edu.mines.acmX.exhibit.stdlib.graphics.Coordinate3D;
 
-public class LaunchModule extends ProcessingModule {
+public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modules.ProcessingModule {
 
 	private static HardwareManager hwMgr;
 	private static EventManager evtMgr;
@@ -33,7 +32,7 @@ public class LaunchModule extends ProcessingModule {
 	
 
 	public void setup() {
-		size(950, 450, P2D);
+		size(width, height, P2D);
 		// smooth();
 		
 		try {
@@ -139,6 +138,9 @@ public class LaunchModule extends ProcessingModule {
 		}
 		
 		public void handUpdated(HandPosition pos) {
+//			if (handID == -1)  {
+//				handID = pos.id;
+//			}
 			if (pos.id == handID) {
 				position = pos.position;
 			}

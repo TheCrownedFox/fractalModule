@@ -1,6 +1,7 @@
 package com.austindiviness.test;
 
-import edu.mines.acmX.exhibit.module_manager.ProcessingModule;
+import edu.mines.acmX.exhibit.module_management.modules.ProcessingModule;
+
 
 public class EasyTest extends ProcessingModule {
 

@@ -1,0 +1,6 @@
+2013-06-03 21:03:18,006 module_manager.ModuleManager
+  INFO Loading a module manager manifest file
+
+2013-06-03 21:03:18,007 module_manager.ModuleManager
+  INFO Loading Module Manager config file [src/test/resources/module_manager/CLoaderModuleManagerManifest.xml]
+
