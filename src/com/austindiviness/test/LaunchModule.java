@@ -15,6 +15,7 @@ import edu.mines.acmX.exhibit.stdlib.graphics.Coordinate3D;
 
 public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modules.ProcessingModule {
 
+	public static final int COUNTDOWN = 15000;
 	private static HardwareManager hwMgr;
 	private static EventManager evtMgr;
 	
@@ -29,12 +30,14 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 	float growthTarget = 0;
 	float x;
 	float y;
+	int timeToClose;
+	int timeLostHand;
 	
 
 	public void setup() {
 		size(width, height, P2D);
 		// smooth();
-		
+		timeLostHand = -1;
 		try {
 			hwMgr = HardwareManager.getInstance();
 		} catch (HardwareManagerManifestException | DeviceConnectionException e) {
@@ -64,6 +67,7 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 				mouseWheel(evt.getWheelRotation());
 			}
 		});
+		
 	}
 	
 	public void update() {
@@ -72,6 +76,14 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 			x = receiver.getX();
 			y = receiver.getY();
 			growthTarget = (receiver.getZ() - receiver.getOffset()) / 20;
+		}
+		else if (receiver.lostHand()) {
+			if (timeLostHand == -1) {
+				timeLostHand = millis();
+			}
+		}
+		if (!receiver.lostHand()) {
+			timeLostHand = -1;
 		}
 	}
 
@@ -85,7 +97,18 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 		line(0, 0, 0, height / 2);
 		branch((float) (height / 4.), 17);
 		growth += (growthTarget / 10 - growth + 1.) / deley;
-
+		if (millis() - timeLostHand < COUNTDOWN && receiver.lostHand()) {
+			pushMatrix();
+			resetMatrix();
+			fill(255, 0, 0);
+			int secondsLeft = (COUNTDOWN - millis() + timeLostHand) / 1000;
+			textSize(96);
+			text("" + secondsLeft, width / 2, height / 2);
+			popMatrix();
+		}
+		else if (millis() - timeLostHand >= COUNTDOWN && receiver.lostHand()) {
+			exit();
+		}
 	}
 
 	void mouseWheel(int delta) {
@@ -121,10 +144,12 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 		private Coordinate3D position;
 		int handID = -1;
 		float offsetZ;
+		boolean lostHand;
 		
 		public MyHandReceiver() {
 			position = new Coordinate3D(0, 0, 0);
 			offsetZ = 0;
+			lostHand = false;
 		}
 		
 		public void handCreated(HandPosition pos) {
@@ -134,13 +159,11 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 			}
 			position = pos.position;
 			offsetZ = pos.position.getZ();
+			lostHand = false;
 			
 		}
 		
 		public void handUpdated(HandPosition pos) {
-//			if (handID == -1)  {
-//				handID = pos.id;
-//			}
 			if (pos.id == handID) {
 				position = pos.position;
 			}
@@ -150,6 +173,7 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 		public void handDestroyed(int id) {
 			if (id == handID) {
 				handID = -1;
+				lostHand = true;
 			}
 		}
 		
@@ -171,6 +195,10 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 		
 		public float getOffset() {
 			return offsetZ;
+		}
+		
+		public boolean lostHand() {
+			return lostHand;
 		}
 	}
 }
