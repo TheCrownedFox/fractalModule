@@ -11,7 +11,7 @@
         author="James Noeckel"
         version="1" >
         <inputs>
-            
+            <input input-type="handtracking" />
         </inputs>
         <requires-module>
             

@@ -4,14 +4,15 @@ import java.util.List;
 
 import edu.mines.acmX.exhibit.input_services.events.EventManager;
 import edu.mines.acmX.exhibit.input_services.events.EventType;
+import edu.mines.acmX.exhibit.input_services.events.HandReceiver;
 import edu.mines.acmX.exhibit.input_services.hardware.BadFunctionalityRequestException;
 import edu.mines.acmX.exhibit.input_services.hardware.DeviceConnectionException;
-import edu.mines.acmX.exhibit.input_services.hardware.HandPosition;
 import edu.mines.acmX.exhibit.input_services.hardware.HardwareManager;
 import edu.mines.acmX.exhibit.input_services.hardware.HardwareManagerManifestException;
 import edu.mines.acmX.exhibit.input_services.hardware.devicedata.HandTrackerInterface;
-import edu.mines.acmX.exhibit.input_services.hardware.drivers.openni.HandReceiver;
+import edu.mines.acmX.exhibit.input_services.hardware.drivers.InvalidConfigurationFileException;
 import edu.mines.acmX.exhibit.stdlib.graphics.Coordinate3D;
+import edu.mines.acmX.exhibit.stdlib.graphics.HandPosition;
 
 public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modules.ProcessingModule {
 
@@ -40,7 +41,7 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 		timeLostHand = -1;
 		try {
 			hwMgr = HardwareManager.getInstance();
-		} catch (HardwareManagerManifestException | DeviceConnectionException e) {
+		} catch (HardwareManagerManifestException e) {
 			e.printStackTrace();
 		}
 		
@@ -49,7 +50,7 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 			List<String> drivers = hwMgr.getDevices("handtracking");
 			driver = (HandTrackerInterface) hwMgr.inflateDriver(drivers.get(0), "handtracking");
 			
-		} catch (BadFunctionalityRequestException e) {
+		} catch (BadFunctionalityRequestException | InvalidConfigurationFileException | DeviceConnectionException e) {
 			e.printStackTrace();
 		}
 		
@@ -85,6 +86,9 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 		if (!receiver.lostHand()) {
 			timeLostHand = -1;
 		}
+		if (millis() - timeLostHand >= COUNTDOWN && receiver.lostHand()) {
+			exit();
+		}
 	}
 
 	public void draw() {
@@ -106,9 +110,7 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 			text("" + secondsLeft, width / 2, height / 2);
 			popMatrix();
 		}
-		else if (millis() - timeLostHand >= COUNTDOWN && receiver.lostHand()) {
-			exit();
-		}
+		
 	}
 
 	void mouseWheel(int delta) {
@@ -153,19 +155,18 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 		}
 		
 		public void handCreated(HandPosition pos) {
-			System.out.println("Got a hand: " + pos.id);
 			if (handID == -1) {
-				handID = pos.id;
+				handID = pos.getId();
 			}
-			position = pos.position;
-			offsetZ = pos.position.getZ();
+			position = pos.getPosition();
+			offsetZ = pos.getPosition().getZ();
 			lostHand = false;
 			
 		}
 		
 		public void handUpdated(HandPosition pos) {
-			if (pos.id == handID) {
-				position = pos.position;
+			if (pos.getId() == handID) {
+				position = pos.getPosition();
 			}
 			
 		}
