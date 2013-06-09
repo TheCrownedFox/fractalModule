@@ -1,21 +1,21 @@
 package com.austindiviness.test;
 
-import java.util.List;
-
 import edu.mines.acmX.exhibit.input_services.events.EventManager;
 import edu.mines.acmX.exhibit.input_services.events.EventType;
 import edu.mines.acmX.exhibit.input_services.events.HandReceiver;
 import edu.mines.acmX.exhibit.input_services.hardware.BadFunctionalityRequestException;
-import edu.mines.acmX.exhibit.input_services.hardware.DeviceConnectionException;
 import edu.mines.acmX.exhibit.input_services.hardware.HardwareManager;
 import edu.mines.acmX.exhibit.input_services.hardware.HardwareManagerManifestException;
+import edu.mines.acmX.exhibit.input_services.hardware.UnknownDriverRequest;
 import edu.mines.acmX.exhibit.input_services.hardware.devicedata.HandTrackerInterface;
 import edu.mines.acmX.exhibit.input_services.hardware.drivers.InvalidConfigurationFileException;
+import edu.mines.acmX.exhibit.module_management.modules.ProcessingModule;
 import edu.mines.acmX.exhibit.stdlib.graphics.Coordinate3D;
 import edu.mines.acmX.exhibit.stdlib.graphics.HandPosition;
 
-public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modules.ProcessingModule {
+public class LaunchModule extends ProcessingModule {
 
+	//time (in ms) to wait before closing
 	public static final int COUNTDOWN = 15000;
 	private static HardwareManager hwMgr;
 	private static EventManager evtMgr;
@@ -23,20 +23,20 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 	private HandTrackerInterface driver;
 	private MyHandReceiver receiver;
 	
-	float curlx = 0;
-	float curly = 0;
-	float f = (float) (sqrt(2) / 2.);
-	float deley = 10;
-	float growth = 0;
-	float growthTarget = 0;
-	float x;
-	float y;
-	int timeToClose;
-	int timeLostHand;
+	private float curlx = 0;
+	private float curly = 0;
+	private float f = (float) (sqrt(2) / 2.);
+	private float deley = 10;
+	private float growth = 0;
+	private float growthTarget = 0;
+	private float x;
+	private float y;
+	private int timeLostHand;
 	
 
 	public void setup() {
 		size(width, height, P2D);
+		noCursor();
 		// smooth();
 		timeLostHand = -1;
 		try {
@@ -47,10 +47,12 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 		
 		try {
 			
-			List<String> drivers = hwMgr.getDevices("handtracking");
-			driver = (HandTrackerInterface) hwMgr.inflateDriver(drivers.get(0), "handtracking");
+			driver = (HandTrackerInterface) hwMgr.getInitialDriver("handtracking");
 			
-		} catch (BadFunctionalityRequestException | InvalidConfigurationFileException | DeviceConnectionException e) {
+		} catch (BadFunctionalityRequestException | InvalidConfigurationFileException e) {
+			e.printStackTrace();
+		} catch (UnknownDriverRequest e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -61,13 +63,6 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 		evtMgr.registerReceiver(EventType.HAND_CREATED, receiver);
 		evtMgr.registerReceiver(EventType.HAND_UPDATED, receiver);
 		evtMgr.registerReceiver(EventType.HAND_DESTROYED, receiver);
-		
-		
-		addMouseWheelListener(new java.awt.event.MouseWheelListener() {
-			public void mouseWheelMoved(java.awt.event.MouseWheelEvent evt) {
-				mouseWheel(evt.getWheelRotation());
-			}
-		});
 		
 	}
 	
@@ -101,20 +96,29 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 		line(0, 0, 0, height / 2);
 		branch((float) (height / 4.), 17);
 		growth += (growthTarget / 10 - growth + 1.) / deley;
-		if (millis() - timeLostHand < COUNTDOWN && receiver.lostHand()) {
+		if (receiver.whichHand() == -1) {
+			pushMatrix();
+			resetMatrix();
+			fill(255, 0, 0);
+			textSize(96);
+			textAlign(CENTER, CENTER);
+			text("Wave to Begin", width / 2, (int) (height * 0.35));
+			textAlign(LEFT, TOP);
+			popMatrix();
+		}
+		if (receiver.lostHand()) {
 			pushMatrix();
 			resetMatrix();
 			fill(255, 0, 0);
 			int secondsLeft = (COUNTDOWN - millis() + timeLostHand) / 1000;
 			textSize(96);
+			textAlign(CENTER, CENTER);
+			text("Wave to Begin", width / 2, (int) (height * 0.35));
 			text("" + secondsLeft, width / 2, height / 2);
+			textAlign(LEFT, TOP);
 			popMatrix();
 		}
 		
-	}
-
-	void mouseWheel(int delta) {
-		growthTarget += delta;
 	}
 
 	void branch(float len, int num) {
@@ -135,10 +139,6 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 			branch(len, num);
 			popMatrix();
 		}
-	}
-	
-	public void mouseClicked() {
-		exit();
 	}
 	
 	class MyHandReceiver extends HandReceiver {
@@ -165,6 +165,11 @@ public class LaunchModule extends edu.mines.acmX.exhibit.module_management.modul
 		}
 		
 		public void handUpdated(HandPosition pos) {
+			if (handID == -1) {
+				handID = pos.getId();
+				lostHand = false;
+			}
+			
 			if (pos.getId() == handID) {
 				position = pos.getPosition();
 			}
