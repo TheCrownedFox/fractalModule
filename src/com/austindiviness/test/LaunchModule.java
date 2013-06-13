@@ -2,7 +2,6 @@ package com.austindiviness.test;
 
 import edu.mines.acmX.exhibit.input_services.events.EventManager;
 import edu.mines.acmX.exhibit.input_services.events.EventType;
-import edu.mines.acmX.exhibit.input_services.events.HandReceiver;
 import edu.mines.acmX.exhibit.input_services.hardware.BadFunctionalityRequestException;
 import edu.mines.acmX.exhibit.input_services.hardware.HardwareManager;
 import edu.mines.acmX.exhibit.input_services.hardware.HardwareManagerManifestException;
@@ -12,6 +11,7 @@ import edu.mines.acmX.exhibit.input_services.hardware.drivers.InvalidConfigurati
 import edu.mines.acmX.exhibit.module_management.modules.ProcessingModule;
 import edu.mines.acmX.exhibit.stdlib.graphics.Coordinate3D;
 import edu.mines.acmX.exhibit.stdlib.graphics.HandPosition;
+import edu.mines.acmX.exhibit.stdlib.input_processing.receivers.HandReceiver;
 
 public class LaunchModule extends ProcessingModule {
 
